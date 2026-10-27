@@ -31,6 +31,7 @@ import '../../backup/pages/backup_page.dart';
 import '../../quick_phrase/pages/quick_phrases_page.dart';
 import '../../instruction_injection/pages/instruction_injection_page.dart';
 import '../../world_book/pages/world_book_page.dart';
+import '../../device_ops/pages/device_ops_page.dart';
 import '../../trollhax_pack/pages/trollhax_pack_page.dart';
 import '../../../shared/widgets/section_card.dart';
 import 'network_proxy_page.dart';
@@ -367,6 +368,17 @@ class SettingsPage extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (_) => const InstructionInjectionPage(),
                     ),
+                  );
+                },
+              ),
+              _iosDivider(context),
+              _iosNavRow(
+                context,
+                icon: Lucide.Smartphone,
+                label: '设备能力 · 越狱环境',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const DeviceOpsPage()),
                   );
                 },
               ),
