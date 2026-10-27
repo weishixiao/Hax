@@ -1,12 +1,12 @@
 import 'package:uuid/uuid.dart';
 
-import '../../../core/models/instruction_injection.dart';
-import '../../../core/models/world_book.dart';
-import '../../../core/providers/assistant_provider.dart';
-import '../../../core/providers/instruction_injection_provider.dart';
-import '../../../core/providers/settings_provider.dart';
-import '../../../core/providers/world_book_provider.dart';
-import '../../../core/services/skills/skills_service.dart';
+import '../../core/models/instruction_injection.dart';
+import '../../core/models/world_book.dart';
+import '../../core/providers/assistant_provider.dart';
+import '../../core/providers/instruction_injection_provider.dart';
+import '../../core/providers/settings_provider.dart';
+import '../../core/providers/world_book_provider.dart';
+import '../../core/services/skills/skills_service.dart';
 import 'data/trollhax_knowledge_data.dart';
 import 'data/trollhax_prompt_data.dart';
 import 'data/trollhax_provider_data.dart';
