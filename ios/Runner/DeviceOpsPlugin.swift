@@ -155,18 +155,37 @@ final class DeviceOpsPlugin {
     }
   }
 
+  // iOS SDK 不带 libproc.h，运行时用 dlsym 取符号。
+  private typealias ProcListAllPidsFn = @convention(c) (UnsafeMutableRawPointer?, Int32) -> Int32
+  private typealias ProcPidPathFn = @convention(c) (Int32, UnsafeMutableRawPointer?, UInt32) -> Int32
+
+  private static let libprocHandle: UnsafeMutableRawPointer? =
+    dlopen("/usr/lib/libproc.dylib", RTLD_LAZY) ?? dlopen(nil, RTLD_LAZY)
+
   private static func listProcesses() -> [[String: Any]] {
+    guard let handle = libprocHandle,
+      let listSym = dlsym(handle, "proc_listallpids"),
+      let pathSym = dlsym(handle, "proc_pidpath")
+    else { return [] }
+    let listFn = unsafeBitCast(listSym, to: ProcListAllPidsFn.self)
+    let pathFn = unsafeBitCast(pathSym, to: ProcPidPathFn.self)
+
     let maxCount = 4096
     var pids = [pid_t](repeating: 0, count: maxCount)
-    let bytes = proc_listallpids(&pids, Int32(maxCount * MemoryLayout<pid_t>.size))
+    let bytes = pids.withUnsafeMutableBytes { raw -> Int32 in
+      listFn(raw.baseAddress, Int32(maxCount * MemoryLayout<pid_t>.size))
+    }
     guard bytes > 0 else { return [] }
     let count = Int(bytes) / MemoryLayout<pid_t>.size
+
     var out: [[String: Any]] = []
     var buffer = [CChar](repeating: 0, count: 4096)
     for index in 0..<count {
       let pid = pids[index]
       if pid <= 0 { continue }
-      let len = proc_pidpath(pid, &buffer, UInt32(buffer.count))
+      let len = buffer.withUnsafeMutableBytes { raw -> Int32 in
+        pathFn(pid, raw.baseAddress, UInt32(raw.count))
+      }
       let path = len > 0 ? String(cString: buffer) : ""
       let name = path.isEmpty ? "" : (path as NSString).lastPathComponent
       out.append(["pid": Int(pid), "name": name, "path": path])
