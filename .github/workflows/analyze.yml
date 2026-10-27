@@ -3,6 +3,8 @@ name: Dart Analyze
 # 手动 / PR 触发的轻量静态检查（不做多平台打包）
 on:
   workflow_dispatch:
+  push:
+    branches: ['feat/**', 'fix/**']
   pull_request:
     branches: [master]
 
