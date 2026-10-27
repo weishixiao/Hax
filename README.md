@@ -9,6 +9,11 @@
 Use every major model in one app, give it a workspace to get real work done, and keep your data on your own device.
 
 <p>
+  <a href="https://github.com/weishixiao/Hax/actions/workflows/build-stable-47.yml"><img src="https://github.com/weishixiao/Hax/actions/workflows/build-stable-47.yml/badge.svg?branch=master" alt="iOS Build" /></a>
+  <a href="https://github.com/weishixiao/Hax/actions/workflows/analyze.yml"><img src="https://github.com/weishixiao/Hax/actions/workflows/analyze.yml/badge.svg?branch=master" alt="Dart Analyze" /></a>
+</p>
+
+<p>
   <a href="https://github.com/Chevey339/kelivo/releases/latest"><img src="https://img.shields.io/github/v/release/Chevey339/kelivo?style=flat-square&amp;label=release" alt="Latest release" /></a>
   <a href="https://github.com/Chevey339/kelivo/releases"><img src="https://img.shields.io/github/downloads/Chevey339/kelivo/total?style=flat-square" alt="Downloads" /></a>
   <a href="https://github.com/Chevey339/kelivo/stargazers"><img src="https://img.shields.io/github/stars/Chevey339/kelivo?style=flat-square" alt="Stars" /></a>
