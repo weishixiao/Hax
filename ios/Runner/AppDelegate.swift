@@ -13,6 +13,7 @@
    private let backgroundGenerationHandler = MobileBackgroundHandler()
    private let oauthHandler = IosOAuthHandler()
    private let deviceLocalToolsHandler = DeviceLocalToolsHandler()
+   private var deviceOpsPlugin: DeviceOpsPlugin?
    private let iosTranslationHandler = IosTranslationHandler()
    private let scheduledTaskNotifications = ScheduledTaskNotifications()
    private let incomingShareHandler = IosIncomingShareHandler()
@@ -57,6 +58,7 @@
         ($0 as? InAppWebView)?.browserNativeViewId
       }
       incomingShareHandler.register(messenger: controller.binaryMessenger)
+      deviceOpsPlugin = DeviceOpsPlugin.register(messenger: controller.binaryMessenger)
       let clipboardChannel = FlutterMethodChannel(name: "app.clipboard", binaryMessenger: controller.binaryMessenger)
       clipboardChannel.setMethodCallHandler { (call: FlutterMethodCall, result: @escaping FlutterResult) in
         if call.method == "getClipboardImages" {

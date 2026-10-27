@@ -90,6 +90,50 @@ class FileUploadService {
     'mdx',
     'yml',
     'yaml',
+    // 安装包 / 二进制 / 压缩包 / 逆向相关
+    'deb',
+    'ipa',
+    'tipa',
+    'apk',
+    'xapk',
+    'dylib',
+    'so',
+    'a',
+    'o',
+    'elf',
+    'bin',
+    'img',
+    'dmg',
+    'zip',
+    'tar',
+    'gz',
+    'tgz',
+    'bz2',
+    'xz',
+    '7z',
+    'rar',
+    'plist',
+    'mobileprovision',
+    'entitlements',
+    'mobileconfig',
+    'cer',
+    'pem',
+    'p12',
+    'sqlite',
+    'db',
+    'sql',
+    'lua',
+    'rb',
+    'go',
+    'rs',
+    'php',
+    'swift',
+    'c',
+    'cpp',
+    'h',
+    'hpp',
+    'm',
+    'mm',
   ];
 
   static bool supportsWithoutWorkspace(DocumentAttachment file) {
@@ -321,12 +365,12 @@ class FileUploadService {
     if (mediaController.restoringDraft) return;
     final target = mediaController.capture();
     try {
-      final anyFile = hasWorkspace?.call() ?? false;
+      // 始终用 FileType.any：iOS 的 custom 过滤依赖系统 UTI，
+      // .deb / .ipa 这类没有注册 UTI 的扩展名会被直接隐藏，选中不了。
       final res = await FilePicker.platform.pickFiles(
         allowMultiple: true,
         withData: false,
-        type: anyFile ? FileType.any : FileType.custom,
-        allowedExtensions: anyFile ? null : supportedExtensions,
+        type: FileType.any,
       );
       if (res == null || res.files.isEmpty) return;
       final docs = <DocumentAttachment>[];
