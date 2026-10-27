@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import '../../../core/models/assistant.dart';
 import '../../../core/models/health_data_type.dart';
 import '../../../core/services/browser/browser_tools_service.dart';
+import '../../../core/services/github_agent_service.dart';
+import '../../../core/services/trollstore_service.dart';
 import 'calculator_service.dart';
 
 typedef TextToSpeechStarter = Future<void> Function(String text);
@@ -30,6 +32,8 @@ class LocalToolNames {
   static const String remindersQuery = 'reminders_query';
   static const String remindersCreate = 'reminders_create';
   static const String remindersComplete = 'reminders_complete';
+  static const String githubAgent = 'github_agent';
+  static const String trollstoreInstall = 'trollstore_install';
 
   static const List<String> all = [
     timeInfo,
@@ -48,12 +52,16 @@ class LocalToolNames {
     remindersQuery,
     remindersCreate,
     remindersComplete,
+    githubAgent,
+    trollstoreInstall,
   ];
 
   static const List<String> requiresUserApproval = [
     calendarCreate,
     remindersCreate,
     remindersComplete,
+    githubAgent,
+    trollstoreInstall,
   ];
 }
 
@@ -478,6 +486,10 @@ class LocalToolsService {
         return _remindersCreateDefinition();
       case LocalToolNames.remindersComplete:
         return _remindersCompleteDefinition;
+      case LocalToolNames.githubAgent:
+        return _githubAgentDefinition;
+      case LocalToolNames.trollstoreInstall:
+        return _trollstoreInstallDefinition;
       default:
         throw ArgumentError.value(name, 'name', 'Unknown local tool');
     }
@@ -596,10 +608,90 @@ class LocalToolsService {
         DeviceLocalTools.remindersSupported) {
       return _invokeDeviceTool('completeReminder', args);
     }
+    if (name == LocalToolNames.githubAgent) {
+      final task = (args['task'] ?? '').toString().trim();
+      if (task.isEmpty) {
+        return jsonEncode({'error': 'missing_task'});
+      }
+      try {
+        await GitHubAgentService.dispatchTask(task: task);
+        final run = await GitHubAgentService.latestRun();
+        return jsonEncode({
+          'ok': true,
+          'run_url': run?['html_url'],
+          'status': run?['status'],
+        });
+      } catch (error) {
+        return jsonEncode({'error': '$error'});
+      }
+    }
+    if (name == LocalToolNames.trollstoreInstall) {
+      final path = (args['path'] ?? '').toString().trim();
+      if (path.isEmpty) {
+        return jsonEncode({'error': 'missing_path'});
+      }
+      try {
+        final session = await TrollStoreService.installFile(path);
+        return jsonEncode({
+          'ok': true,
+          'served_from': session.url,
+          'file': session.fileName,
+        });
+      } catch (error) {
+        return jsonEncode({'error': '$error'});
+      }
+    }
     return null;
   }
 
   static const MethodChannel _deviceToolsChannel = DeviceLocalTools._channel;
+
+  static const Map<String, dynamic> _githubAgentDefinition = {
+    'type': 'function',
+    'function': {
+      'name': LocalToolNames.githubAgent,
+      'description':
+          'Dispatch a task to this repository\'s CI agent '
+          '(.github/workflows/agent-fix.yml). The CI agent edits code, runs '
+          'checks and opens a pull request; it never pushes to the default '
+          'branch. Use when the user asks to change/fix the project itself. '
+          'Returns the run URL and status.',
+      'parameters': {
+        'type': 'object',
+        'properties': {
+          'task': {
+            'type': 'string',
+            'description':
+                'Complete, self-contained instruction for the CI agent.',
+          },
+        },
+        'required': ['task'],
+      },
+    },
+  };
+
+  static const Map<String, dynamic> _trollstoreInstallDefinition = {
+    'type': 'function',
+    'function': {
+      'name': LocalToolNames.trollstoreInstall,
+      'description':
+          'Install a local .ipa/.tipa on this jailbroken device through '
+          'TrollStore. Use only with a path the user provided or that exists '
+          'in the workspace. No signing is needed: TrollStore applies its '
+          'permanent signature. Example: install /var/mobile/.../App.ipa',
+      'parameters': {
+        'type': 'object',
+        'properties': {
+          'path': {
+            'type': 'string',
+            'description':
+                'Absolute path to the .ipa/.tipa file on this device.',
+          },
+        },
+        'required': ['path'],
+      },
+    },
+  };
 
   static const Map<String, dynamic> _phoneControlDefinition = {
     'type': 'function',

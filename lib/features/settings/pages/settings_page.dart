@@ -32,6 +32,7 @@ import '../../quick_phrase/pages/quick_phrases_page.dart';
 import '../../instruction_injection/pages/instruction_injection_page.dart';
 import '../../world_book/pages/world_book_page.dart';
 import '../../device_ops/device_ops_page.dart';
+import '../../dev_tools/dev_tools_page.dart';
 import '../../trollhax_pack/trollhax_pack_page.dart';
 import '../../../shared/widgets/section_card.dart';
 import 'network_proxy_page.dart';
@@ -379,6 +380,17 @@ class SettingsPage extends StatelessWidget {
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const DeviceOpsPage()),
+                  );
+                },
+              ),
+              _iosDivider(context),
+              _iosNavRow(
+                context,
+                icon: Lucide.Wrench,
+                label: '开发工具（GitHub / TrollStore）',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const DevToolsPage()),
                   );
                 },
               ),
