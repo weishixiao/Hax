@@ -436,6 +436,14 @@ class _DeviceOpsPageState extends State<DeviceOpsPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                if (_selectedApp != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text(
+                      '已选：${_selectedApp!.name}',
+                      style: const TextStyle(fontSize: 12.5),
+                    ),
+                  ),
                 TextField(
                   controller: _bundleController,
                   decoration: InputDecoration(
