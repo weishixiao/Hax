@@ -36,4 +36,5 @@ jobs:
         run: dart format --output=none --set-exit-if-changed lib
 
       - name: Flutter analyze
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+        # 只分析应用代码：dependencies/ 下的子包有各自的依赖，不能在这里分析
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings lib test
