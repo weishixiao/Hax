@@ -7,10 +7,10 @@ import '../../../core/providers/instruction_injection_provider.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/providers/world_book_provider.dart';
 import '../../../core/services/skills/skills_service.dart';
-import '../data/trollhax_knowledge_data.dart';
-import '../data/trollhax_prompt_data.dart';
-import '../data/trollhax_provider_data.dart';
-import '../data/trollhax_skill_data.dart';
+import 'data/trollhax_knowledge_data.dart';
+import 'data/trollhax_prompt_data.dart';
+import 'data/trollhax_provider_data.dart';
+import 'data/trollhax_skill_data.dart';
 
 /// 内容包在 Hax 中落地的分组名。
 const String trollHaxModeGroup = 'TrollHax · 模式';
