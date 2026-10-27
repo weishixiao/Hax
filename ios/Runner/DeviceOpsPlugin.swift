@@ -222,7 +222,36 @@ final class DeviceOpsPlugin {
     return result
   }
 
-  // MARK: - 内存
+  // MARK: - 内存（mach_vm_* 用 dlsym 取，避免依赖 SDK 头文件）
+
+  private typealias MachVmRegionFn = @convention(c) (
+    UInt32, UnsafeMutablePointer<UInt64>, UnsafeMutablePointer<UInt64>, Int32,
+    UnsafeMutablePointer<Int32>?, UnsafeMutablePointer<UInt32>, UnsafeMutablePointer<UInt32>?
+  ) -> Int32
+  private typealias MachVmReadOverwriteFn = @convention(c) (
+    UInt32, UInt64, UInt64, UInt64, UnsafeMutablePointer<UInt64>
+  ) -> Int32
+  private typealias MachVmWriteFn = @convention(c) (
+    UInt32, UInt64, UInt, UInt32
+  ) -> Int32
+
+  private static let kernelHandle: UnsafeMutableRawPointer? =
+    dlopen("/usr/lib/system/libsystem_kernel.dylib", RTLD_LAZY) ?? dlopen(nil, RTLD_LAZY)
+
+  private static func machVmRegion() -> MachVmRegionFn? {
+    guard let h = kernelHandle, let sym = dlsym(h, "mach_vm_region") else { return nil }
+    return unsafeBitCast(sym, to: MachVmRegionFn.self)
+  }
+
+  private static func machVmReadOverwrite() -> MachVmReadOverwriteFn? {
+    guard let h = kernelHandle, let sym = dlsym(h, "mach_vm_read_overwrite") else { return nil }
+    return unsafeBitCast(sym, to: MachVmReadOverwriteFn.self)
+  }
+
+  private static func machVmWrite() -> MachVmWriteFn? {
+    guard let h = kernelHandle, let sym = dlsym(h, "mach_vm_write") else { return nil }
+    return unsafeBitCast(sym, to: MachVmWriteFn.self)
+  }
 
   private static func memSearch(args: [String: Any]) -> [String: Any] {
     guard let pid = (args["pid"] as? NSNumber)?.int32Value, pid > 0 else {
@@ -233,6 +262,9 @@ final class DeviceOpsPlugin {
     }
     let width = (args["width"] as? NSNumber)?.intValue ?? 8
     let limit = (args["limit"] as? NSNumber)?.intValue ?? 64
+    guard let regionFn = machVmRegion(), let readFn = machVmReadOverwrite() else {
+      return ["error": "mach_vm 符号不可用"]
+    }
 
     var task: mach_port_t = 0
     let kr = task_for_pid(mach_task_self_, pid, &task)
@@ -242,71 +274,52 @@ final class DeviceOpsPlugin {
     defer { mach_port_deallocate(mach_task_self_, task) }
 
     var hits: [[String: Any]] = []
-    var address: mach_vm_address_t = 0
-    var regionSize: mach_vm_size_t = 0
-    var info = vm_region_basic_info_data_64_t()
-    var objectName: mach_port_t = 0
+    var address: UInt64 = 0
     var guardCounter = 0
-
     while hits.count < limit && guardCounter < 20000 {
       guardCounter += 1
-      regionSize = 0
-      var infoCount = mach_msg_type_number_t(
-        MemoryLayout<vm_region_basic_info_data_64_t>.size / MemoryLayout<natural_t>.size
-      )
-      let query = withUnsafeMutablePointer(to: &info) { infoPointer -> kern_return_t in
-        infoPointer.withMemoryRebound(to: integer_t.self, capacity: Int(infoCount)) { rebound in
-          mach_vm_region(
-            task,
-            &address,
-            &regionSize,
-            VM_REGION_BASIC_INFO_64,
-            rebound,
-            &infoCount,
-            &objectName
-          )
-        }
-      }
-      if query != KERN_SUCCESS || regionSize == 0 { break }
-      if (info.protection & VM_PROT_WRITE) != 0 && regionSize <= 16 * 1024 * 1024 {
+      var size: UInt64 = 0
+      var info = [Int32](repeating: 0, count: 64)
+      var infoCount: UInt32 = 64
+      var objectName: UInt32 = 0
+      let query = regionFn(task, &address, &size, 9, &info, &infoCount, &objectName)
+      if query != 0 || size == 0 { break }
+      let writable = (info[0] & 0x2) != 0  // VM_PROT_WRITE
+      if writable && size <= 16 * 1024 * 1024 {
         hits.append(
           contentsOf: scanRegion(
+            readFn: readFn,
             task: task,
             start: address,
-            size: regionSize,
+            size: size,
             value: value,
             width: width,
             limit: limit - hits.count
           )
         )
       }
-      address += regionSize
+      address += size
     }
     return ["hits": hits, "count": hits.count]
   }
 
   private static func scanRegion(
+    readFn: MachVmReadOverwriteFn,
     task: mach_port_t,
-    start: mach_vm_address_t,
-    size: mach_vm_size_t,
+    start: UInt64,
+    size: UInt64,
     value: Int64,
     width: Int,
     limit: Int
   ) -> [[String: Any]] {
     guard size > 0, limit > 0 else { return [] }
     var buffer = [UInt8](repeating: 0, count: Int(size))
-    var outSize: mach_vm_size_t = 0
-    let kr = buffer.withUnsafeMutableBytes { raw -> kern_return_t in
-      guard let base = raw.baseAddress else { return KERN_FAILURE }
-      return mach_vm_read_overwrite(
-        task,
-        start,
-        size,
-        mach_vm_address_t(UInt(bitPattern: base)),
-        &outSize
-      )
+    var outSize: UInt64 = 0
+    let kr = buffer.withUnsafeMutableBytes { raw -> Int32 in
+      guard let base = raw.baseAddress else { return -1 }
+      return readFn(task, start, size, UInt64(UInt(bitPattern: base)), &outSize)
     }
-    guard kr == KERN_SUCCESS, outSize >= UInt64(width) else { return [] }
+    guard kr == 0, outSize >= UInt64(width) else { return [] }
 
     var hits: [[String: Any]] = []
     let step = max(width, 1)
@@ -329,7 +342,7 @@ final class DeviceOpsPlugin {
         candidate = Int64(bitPattern: raw)
       }
       if candidate == value {
-        hits.append(["address": UInt64(start) + UInt64(offset), "value": candidate])
+        hits.append(["address": start + UInt64(offset), "value": candidate])
       }
       offset += step
     }
@@ -344,6 +357,7 @@ final class DeviceOpsPlugin {
       return ["error": "missing pid/address/value"]
     }
     let width = (args["width"] as? NSNumber)?.intValue ?? 8
+    guard let writeFn = machVmWrite() else { return ["error": "mach_vm_write 符号不可用"] }
     var task: mach_port_t = 0
     let kr = task_for_pid(mach_task_self_, pid, &task)
     guard kr == KERN_SUCCESS, task != 0 else {
@@ -354,16 +368,11 @@ final class DeviceOpsPlugin {
     var data = [UInt8](repeating: 0, count: width)
     let bits = UInt64(bitPattern: value)
     for i in 0..<width { data[i] = UInt8((bits >> (8 * UInt64(i))) & 0xFF) }
-    let result = data.withUnsafeMutableBytes { raw -> kern_return_t in
-      guard let base = raw.baseAddress else { return KERN_FAILURE }
-      return mach_vm_write(
-        task,
-        mach_vm_address_t(address),
-        vm_offset_t(UInt(bitPattern: base)),
-        mach_msg_type_number_t(width)
-      )
+    let result = data.withUnsafeMutableBytes { raw -> Int32 in
+      guard let base = raw.baseAddress else { return -1 }
+      return writeFn(task, address, UInt(UInt(bitPattern: base)), UInt32(width))
     }
-    if result == KERN_SUCCESS { return ["ok": true] }
+    if result == 0 { return ["ok": true] }
     return ["error": "写入失败", "code": Int(result)]
   }
 
