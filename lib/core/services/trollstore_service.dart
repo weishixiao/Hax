@@ -93,10 +93,7 @@ class TrollStoreInstallSession {
           response.headers
             ..set(HttpHeaders.contentTypeHeader, 'application/octet-stream')
             ..set(HttpHeaders.contentLengthHeader, '$length')
-            ..set(
-              HttpHeaders.contentDispositionHeader,
-              'attachment; filename="$fileName"',
-            );
+            ..set('Content-Disposition', 'attachment; filename="$fileName"');
           await response.addStream(file.openRead());
           await response.close();
           _served = true;

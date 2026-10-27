@@ -75,12 +75,12 @@ class GitHubAgentService {
     String path, {
     Map<String, dynamic>? body,
   }) async {
-    final token = await token();
-    if (token.isEmpty) {
+    final authToken = await token();
+    if (authToken.isEmpty) {
       throw StateError('还没有配置 GitHub token');
     }
     final uri = Uri.parse('https://api.github.com$path');
-    final headers = await _headers(token);
+    final headers = await _headers(authToken);
     switch (method) {
       case 'GET':
         return http.get(uri, headers: headers);
