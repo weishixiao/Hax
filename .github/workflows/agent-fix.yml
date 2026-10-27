@@ -1,0 +1,177 @@
+name: Agent Fix (CI)
+
+# 无人值守的 CI agent：
+#   - 只允许手动触发（不做 push / issue_comment 自动触发）
+#   - 只从 master 拉工作分支，禁止直推 master
+#   - 密钥放 Environment `agent`（可在仓库设置里加"必须审批"）
+#   - 产物只有：一个分支 + 一个 PR
+#
+# 需要你在仓库里配置：
+#   1) Settings → Environments → 新建 `agent`，添加 Required reviewers（你自己）
+#      并在 `agent` 环境里添加 secret：ANTHROPIC_API_KEY
+#   2) Settings → Branches → master 保护规则：Require a pull request before merging
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: '交给 agent 的任务描述'
+        required: true
+        type: string
+      base_branch:
+        description: '基线分支（只允许 master / main）'
+        required: false
+        default: master
+        type: string
+      branch_name:
+        description: '工作分支名（留空自动生成）'
+        required: false
+        default: ''
+        type: string
+      max_turns:
+        description: 'agent 最大轮次'
+        required: false
+        default: '30'
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: agent-fix
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    name: 护栏检查
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.pick.outputs.branch }}
+      base: ${{ steps.pick.outputs.base }}
+    steps:
+      - id: pick
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='${{ inputs.base_branch }}'
+          NAME='${{ inputs.branch_name }}'
+          case "$BASE" in
+            master|main) ;;
+            *) echo "::error::基线分支只允许 master/main"; exit 1 ;;
+          esac
+          if [ -z "$NAME" ]; then NAME="agent/run-${{ github.run_id }}"; fi
+          case "$NAME" in
+            master|main|refs/heads/master|refs/heads/main)
+              echo "::error::禁止直推 master/main"; exit 1 ;;
+          esac
+          if [ "${NAME#agent/}" = "$NAME" ]; then
+            echo "::error::工作分支必须以 agent/ 开头"; exit 1
+          fi
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "branch=$NAME" >> "$GITHUB_OUTPUT"
+
+  fix:
+    name: 运行 agent
+    needs: guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # 需要审批时，把 Required reviewers 配在 agent 环境上
+    environment: agent
+    steps:
+      - name: 检出基线分支
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.guard.outputs.base }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: 建工作分支
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "agent-ci"
+          git config user.email "agent-ci@users.noreply.github.com"
+          git checkout -b "${{ needs.guard.outputs.branch }}"
+
+      - name: 运行 agent
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --max-turns ${{ inputs.max_turns }}
+          prompt: |
+            仓库：${{ github.repository }}
+            分支：${{ needs.guard.outputs.branch }}（基线 ${{ needs.guard.outputs.base }}）
+
+            任务：
+            ${{ inputs.task }}
+
+            硬性约束：
+            1. 只在本工作分支提交，绝对不要 push 到 master/main，也不要改默认分支。
+            2. 不要修改 .github/workflows/ 下的文件。
+            3. 不要读取、打印或提交任何 token / secret。
+            4. 改动尽量小，遵循仓库现有代码风格。
+            5. 完成后用一句话总结改了什么、为什么。
+
+      - name: 收集变更（审计用）
+        id: diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="origin/${{ needs.guard.outputs.base }}"
+          if git diff --quiet "$BASE"...HEAD; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::agent 没有产生任何提交"
+            exit 0
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          git diff --stat "$BASE"...HEAD > /tmp/agent-stat.txt
+          git log --format='- %h %s' "$BASE"..HEAD > /tmp/agent-log.txt
+
+      - name: 推送工作分支
+        if: steps.diff.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin "HEAD:refs/heads/${{ needs.guard.outputs.branch }}"
+
+      - name: 开 PR（仅分支 → PR，不合并）
+        if: steps.diff.outputs.changed == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE: ${{ needs.guard.outputs.base }}
+          BRANCH: ${{ needs.guard.outputs.branch }}
+          TASK: ${{ inputs.task }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## Agent 任务"
+            echo
+            echo '```'
+            echo "$TASK"
+            echo '```'
+            echo
+            echo "## 改动摘要"
+            echo '```'
+            cat /tmp/agent-stat.txt
+            echo '```'
+            echo
+            echo "## 提交"
+            echo '```'
+            cat /tmp/agent-log.txt
+            echo '```'
+            echo
+            echo "> 由 .github/workflows/agent-fix.yml 自动生成；合并前请 review diff。"
+            echo "> 回滚：关闭本 PR，或合并后 \`git revert <merge-sha>\`。"
+          } > /tmp/pr-body.md
+          gh pr create \
+            --base "$BASE" \
+            --head "$BRANCH" \
+            --title "agent: $(printf '%s' "$TASK" | head -c 60)" \
+            --body-file /tmp/pr-body.md
+
+      - name: 没有变更时说明
+        if: steps.diff.outputs.changed != 'true'
+        run: echo "agent 未产生提交，未创建 PR。"
