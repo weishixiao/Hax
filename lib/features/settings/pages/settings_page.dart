@@ -270,8 +270,9 @@ class SettingsPage extends StatelessWidget {
                 icon: Lucide.Terminal,
                 label: l10n.settingsPageMcp,
                 onTap: () {
-                  Navigator.of(context)
-                      .push(MaterialPageRoute(builder: (_) => const McpPage()));
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (_) => const McpPage()));
                 },
               ),
               _iosDivider(context),

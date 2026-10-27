@@ -21,7 +21,8 @@ class TrollHaxSkill {
 const List<TrollHaxSkill> trollHaxSkills = <TrollHaxSkill>[
   TrollHaxSkill(
     name: "Translate & Polish",
-    description: "multilingual translation and text polishing between Chinese/English etc., removing stiff translationese to fit target language habits",
+    description:
+        "multilingual translation and text polishing between Chinese/English etc., removing stiff translationese to fit target language habits",
     body: r'''当用户要求翻译或润色文字时执行本技能：
 1. 先确认源语言与目标语言；
 2. 翻译时以自然、地道为目标，避免逐字直译和机翻腔；
@@ -30,7 +31,8 @@ const List<TrollHaxSkill> trollHaxSkills = <TrollHaxSkill>[
   ),
   TrollHaxSkill(
     name: "Code Review",
-    description: "review code for security, performance, readability and logic correctness, output issue list",
+    description:
+        "review code for security, performance, readability and logic correctness, output issue list",
     body: r'''当用户提供代码片段或要求审查时执行本技能：
 1. 先识别语言与用途；
 2. 按 安全漏洞(注入/XSS/越权)、性能、可读性、边界情况 四类检查；
@@ -39,7 +41,8 @@ const List<TrollHaxSkill> trollHaxSkills = <TrollHaxSkill>[
   ),
   TrollHaxSkill(
     name: "Tweak Dev Assistant",
-    description: "Theos Tweak development full-flow guide: project structure, Makefile, packaging, GitHub Actions online build",
+    description:
+        "Theos Tweak development full-flow guide: project structure, Makefile, packaging, GitHub Actions online build",
     body: r'''当用户涉及 Tweak 开发时执行本技能：
 1. 工程需包含 Makefile / Tweak.x / .plist；
 2. 提示 Theos 需 submodules: recursive 克隆，GitHub Actions 用 macos-14 runner + brew install ldid；
@@ -48,7 +51,8 @@ const List<TrollHaxSkill> trollHaxSkills = <TrollHaxSkill>[
   ),
   TrollHaxSkill(
     name: "iOS 注入分析",
-    description: "inject a dylib into an iOS app, check injection status, remove injection. Use for: enable/disable/verify tweak injection into target app. Don't use for: package inspection (use package), memory hacking (use memory). Example: user wants to inject a tweak dylib into a game.",
+    description:
+        "inject a dylib into an iOS app, check injection status, remove injection. Use for: enable/disable/verify tweak injection into target app. Don't use for: package inspection (use package), memory hacking (use memory). Example: user wants to inject a tweak dylib into a game.",
     body: r'''当用户要求对 iOS App 做 dylib 注入/查看注入状态/移除注入时执行本技能：
 ## 适用范围
 - 注入 .dylib 到指定 App、查询注入状态、移除注入、注入后验证
@@ -69,7 +73,8 @@ const List<TrollHaxSkill> trollHaxSkills = <TrollHaxSkill>[
   ),
   TrollHaxSkill(
     name: "网络抓包分析",
-    description: "capture and analyze HTTP/HTTPS traffic of a target app via MITM or local proxy. Use for: see what network requests an app makes, analyze API, headers, plaintext. Don't use for: VPN connection itself (use vpn.capture). Example: user wants to see what the app sends to its server.",
+    description:
+        "capture and analyze HTTP/HTTPS traffic of a target app via MITM or local proxy. Use for: see what network requests an app makes, analyze API, headers, plaintext. Don't use for: VPN connection itself (use vpn.capture). Example: user wants to see what the app sends to its server.",
     body: r'''当用户要求抓包/分析某 App 的网络请求时执行本技能：
 ## 适用范围
 - HTTP/HTTPS 抓包、分析 API 请求/响应/明文、定位证书校验
@@ -89,7 +94,8 @@ const List<TrollHaxSkill> trollHaxSkills = <TrollHaxSkill>[
   ),
   TrollHaxSkill(
     name: "SQLite 数据库取证",
-    description: "analyze SQLite databases (alipay/wechat/etc) using the built-in db tool which auto-bridges the iOS .db into Alpine and runs sqlite3. Use for: list tables, query rows, find credentials/messages. Example: user wants to inspect a chat/transaction database.",
+    description:
+        "analyze SQLite databases (alipay/wechat/etc) using the built-in db tool which auto-bridges the iOS .db into Alpine and runs sqlite3. Use for: list tables, query rows, find credentials/messages. Example: user wants to inspect a chat/transaction database.",
     body: r'''当用户要求分析 iOS 上的 SQLite 数据库（如 alipay.db / wechat.db）时执行本技能：
 ## 适用范围
 - 列表、查表结构、条件查询、统计行数、定位关键数据
@@ -108,7 +114,8 @@ const List<TrollHaxSkill> trollHaxSkills = <TrollHaxSkill>[
   ),
   TrollHaxSkill(
     name: "deb/ipa 包解剖",
-    description: "inspect and unpack package files (.deb / .ipa) to see contents, control metadata, injected dylibs, bundles. Use for: what's inside a deb/ipa, extract files. Don't use for: injecting (use inject), analyzing db (use db). Example: user wants to know what a tweak deb contains.",
+    description:
+        "inspect and unpack package files (.deb / .ipa) to see contents, control metadata, injected dylibs, bundles. Use for: what's inside a deb/ipa, extract files. Don't use for: injecting (use inject), analyzing db (use db). Example: user wants to know what a tweak deb contains.",
     body: r'''当用户要求解剖 .deb / .ipa 包时执行本技能：
 ## 适用范围
 - 查看包元数据（control/Info.plist）、列出内容、解包提取、定位注入 dylib
@@ -127,7 +134,8 @@ const List<TrollHaxSkill> trollHaxSkills = <TrollHaxSkill>[
   ),
   TrollHaxSkill(
     name: "跨环境文件访问",
-    description: "access iOS files from ISH Alpine toolchain via the automatic bind (Alpine reads/writes iOS paths under the app WORKSPACE, /var/containers bundle, /System, or a specific app's data container via bind_app). Use for: run strings/file/nm/sqlite3/python on an iOS file, or write results back. Example: run strings on an iOS binary via Alpine.",
+    description:
+        "access iOS files from ISH Alpine toolchain via the automatic bind (Alpine reads/writes iOS paths under the app WORKSPACE, /var/containers bundle, /System, or a specific app's data container via bind_app). Use for: run strings/file/nm/sqlite3/python on an iOS file, or write results back. Example: run strings on an iOS binary via Alpine.",
     body: r'''当用户需要让 iOS 文件被 Alpine 工具链（strings/file/nm/sqlite3/python）处理时执行本技能：
 ## 适用范围
 - 让 iOS 文件被 Alpine 工具直读直写（自动 bind 挂载，无 2MB 限制）、把 Alpine 处理结果写回 iOS 侧
@@ -146,7 +154,8 @@ const List<TrollHaxSkill> trollHaxSkills = <TrollHaxSkill>[
   ),
   TrollHaxSkill(
     name: "进程内存修改",
-    description: "modify process memory of a running app (coins, values) like GameGuardian/H5GG. Use for: change numeric values in games/apps at runtime. Don't use for: static dylib injection (use inject). Example: user wants to modify a game's coin count.",
+    description:
+        "modify process memory of a running app (coins, values) like GameGuardian/H5GG. Use for: change numeric values in games/apps at runtime. Don't use for: static dylib injection (use inject). Example: user wants to modify a game's coin count.",
     body: r'''当用户要求修改运行中进程的内存值（如游戏金币/数值）时执行本技能：
 ## 适用范围
 - 搜索内存数值、修改、锁定，作用于指定进程
@@ -165,7 +174,8 @@ const List<TrollHaxSkill> trollHaxSkills = <TrollHaxSkill>[
   ),
   TrollHaxSkill(
     name: "设备信息与定位",
-    description: "get device info, probe, fake/restore location, advertising ID, IDFV. Use for: device details, spoofing location, manage device state. Example: user wants to check device info or fake location.",
+    description:
+        "get device info, probe, fake/restore location, advertising ID, IDFV. Use for: device details, spoofing location, manage device state. Example: user wants to check device info or fake location.",
     body: r'''当用户要求查看设备信息/模拟定位/设备状态时执行本技能：
 ## 适用范围
 - 设备信息查询、定位模拟/还原、广告标识、设备探测
@@ -184,7 +194,8 @@ const List<TrollHaxSkill> trollHaxSkills = <TrollHaxSkill>[
   ),
   TrollHaxSkill(
     name: "App 生命周期管理",
-    description: "manage apps: launch/stop/restart/status, install/uninstall, cache, dependencies, duplicate, diagnose startup/injection. Use for: control and troubleshoot a target app. Example: user wants to restart an app or check why it crashes on launch.",
+    description:
+        "manage apps: launch/stop/restart/status, install/uninstall, cache, dependencies, duplicate, diagnose startup/injection. Use for: control and troubleshoot a target app. Example: user wants to restart an app or check why it crashes on launch.",
     body: r'''当用户要求启动/停止/重启/安装/诊断某个 App 时执行本技能：
 ## 适用范围
 - 启动、停止、重启、状态查询、安装卸载、缓存/依赖、启动诊断
@@ -204,7 +215,8 @@ const List<TrollHaxSkill> trollHaxSkills = <TrollHaxSkill>[
   ),
   TrollHaxSkill(
     name: "Shell & Env 边界参考",
-    description: "iOS 原生 shell 与 Alpine 环境的实测边界结论(按需查询): cstool 架构模式名、tree/jtool2/git/python3 限制、nscan/llvm 用法、installer/provision/auto-bind 路由。Use for: 遇到 shell 工具报错或环境边界限制时查询结论。",
+    description:
+        "iOS 原生 shell 与 Alpine 环境的实测边界结论(按需查询): cstool 架构模式名、tree/jtool2/git/python3 限制、nscan/llvm 用法、installer/provision/auto-bind 路由。Use for: 遇到 shell 工具报错或环境边界限制时查询结论。",
     body: r'''遇到 shell/环境边界问题先查这里(由环境提示词按需加载)：
 ## 工具边界
 - cstool 仅 ARM: 模式名 arm/armbe/thumb/thumbbe/cortexm/armv8/thumbv8/armv8be/thumbv8be/arm64/arm64be; aarch64/x86/x86_64 一律 Invalid → ARM64 用 arm64, ARM32 用 arm/armv8; 非 ARM 架构用 llvm-objdump --macho --arch=x86_64 -d 或 r2 兜底

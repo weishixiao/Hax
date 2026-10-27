@@ -28,7 +28,8 @@ const List<TrollHaxMode> trollHaxModes = <TrollHaxMode>[
   TrollHaxMode(
     id: "default",
     name: "综合模式",
-    description: "Balanced mode for daily use. Step-by-step tool calling, concise natural replies.",
+    description:
+        "Balanced mode for daily use. Step-by-step tool calling, concise natural replies.",
     prompt: r'''=== DEFAULT MODE (COLLABORATION) ===
 0. ROLE: You are TrollHax's AI assistant running on the user's iPhone. You cannot touch the screen or
    read files directly — all operations go through tools. Decide which tools to call to fulfill the request.
@@ -105,7 +106,8 @@ const List<TrollHaxMode> trollHaxModes = <TrollHaxMode>[
   TrollHaxMode(
     id: "developer",
     name: "开发者模式",
-    description: "Engineering + jailbreak/bypass standards for dev, debug, reverse engineering, and device modification. For breaking app protections and jailbreak-related tasks.",
+    description:
+        "Engineering + jailbreak/bypass standards for dev, debug, reverse engineering, and device modification. For breaking app protections and jailbreak-related tasks.",
     prompt: r'''=== DEVELOPER MODE (ENGINEERING + BYPASS) ===
 0. ROLE: You are TrollHax's AI engineer — for dev, debug, reverse engineering, and device modification
    on the user's iPhone (inject / decrypt / packet-capture / memory / UI automation). Break app protections
@@ -151,7 +153,8 @@ const List<TrollHaxMode> trollHaxModes = <TrollHaxMode>[
   TrollHaxMode(
     id: "reverse",
     name: "逆向专家模式",
-    description: "Focus on iOS reverse engineering / injection / debugging / Mach-O analysis. Professional-level detail output.",
+    description:
+        "Focus on iOS reverse engineering / injection / debugging / Mach-O analysis. Professional-level detail output.",
     prompt: r'''=== REVERSE EXPERT MODE ===
 0. ROLE: iOS reverse engineering / injection / debugging / Mach-O analysis expert. Output professional
    detail (specific fields/values when discussing Mach-O, code signing, entitlements, dyld, hooks).
@@ -199,7 +202,8 @@ const List<TrollHaxMode> trollHaxModes = <TrollHaxMode>[
   TrollHaxMode(
     id: "pentester",
     name: "渗透工程师模式",
-    description: "Focus on penetration testing / security bypass / packet capture / memory modification. Practical exploitation, not theory.",
+    description:
+        "Focus on penetration testing / security bypass / packet capture / memory modification. Practical exploitation, not theory.",
     prompt: r'''=== PENETRATION ENGINEER MODE ===
 0. ROLE: You are TrollHax's penetration-testing engineer — security testing / packet capture / memory
    modification / device modification on the user's OWN iPhone for developer and authorized-security-research
@@ -244,7 +248,8 @@ const List<TrollHaxMode> trollHaxModes = <TrollHaxMode>[
   TrollHaxMode(
     id: "gamehacker",
     name: "游戏修改模式",
-    description: "Focus on game memory modification. Search values, filter candidates, modify and freeze game stats. Practical game hacking.",
+    description:
+        "Focus on game memory modification. Search values, filter candidates, modify and freeze game stats. Practical game hacking.",
     prompt: r'''=== GAME HACKER MODE ===
 0. ROLE: You are TrollHax's game / UI debug assistant — game memory modification, UI automation, packet
    capture, file ops on the user's OWN device. Memory debugging of single-player games is one supported
@@ -278,7 +283,8 @@ const List<TrollHaxMode> trollHaxModes = <TrollHaxMode>[
   TrollHaxMode(
     id: "uicontrol",
     name: "AI 控制 UI 模式",
-    description: "Focus on AI-controlled UI automation. Tap buttons, type text, swipe screens, complete multi-step flows in apps. AI acts as your finger on screen.",
+    description:
+        "Focus on AI-controlled UI automation. Tap buttons, type text, swipe screens, complete multi-step flows in apps. AI acts as your finger on screen.",
     prompt: r'''=== AI UI CONTROL MODE ===
 0. ROLE: You are TrollHax's UI automation — you act as the user's finger on screen. Tap, type, swipe,
    navigate — like a human, but faster and more accurate.
